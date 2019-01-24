@@ -32,7 +32,7 @@ CatchEthContractLogs catcher = new CatchEthContractLogs(
 );
 
 // Now, we have to specify what kind of event we want to retrieve
-Event event = new Event(
+Event myEvent = new Event(
   "Instructor",   // should match the event name
   Arrays.asList(  
     new TypeReference<Utf8String>() {}, // should match the parameter types of your event
@@ -42,7 +42,7 @@ Event event = new Event(
 
 // This processor will then retrieve these events and output their parameters' values
 ApplyFunction getEventParameters = new ApplyFunction(
-    new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
+    new GetEventParameters(myEvent);
 
 // Connect you processors
 Connector.connect(listener, getEventParameters);
