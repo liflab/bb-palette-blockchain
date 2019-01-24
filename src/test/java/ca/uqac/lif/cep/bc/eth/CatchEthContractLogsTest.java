@@ -77,17 +77,19 @@ public class CatchEthContractLogsTest
     @Test
     public void testLogProcessor() throws InterruptedException
     {
-        CatchEthContractLogs listener = new CatchEthContractLogs(ETH_NODE_URL, CONTRACT_ADDRESS, true);
-        GetEventParameters getEventParameters = new GetEventParameters(Coursetro.INSTRUCTOR_EVENT);
-        Processor p = new ApplyFunction(getEventParameters);
+        CatchEthContractLogs listener =
+                new CatchEthContractLogs(ETH_NODE_URL, CONTRACT_ADDRESS, true);
+
+        ApplyFunction getEventParameters =
+                new ApplyFunction(new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
 
         Sink printer = new EventPrinter();
 
-        Connector.connect(listener, p);
-        Connector.connect(p, printer);
+        Connector.connect(listener, getEventParameters);
+        Connector.connect(getEventParameters, printer);
 
         listener.start();
-        Thread.sleep(30000);
+        Thread.sleep(60000);
         listener.stop();
     }
 
