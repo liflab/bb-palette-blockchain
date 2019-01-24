@@ -10,6 +10,7 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Async;
 
 /**
  * Connects to an Ethereum node via RPC and wait for EVM log events
@@ -31,6 +32,11 @@ import org.web3j.protocol.http.HttpService;
  */
 public class CatchEthContractLogs extends Processor implements Runnable, Consumer<Log>
 {
+    /**
+     * The interval (in milliseconds) at which the ETH node will be polled
+     */
+    public static final long POLLING_INTERVAL = 500;
+
     /**
      * Semaphore used to stop the listener
      */
@@ -72,7 +78,10 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
         super(0,1);
 
         System.out.println("Initiating connection to eth node at " + eth_node_url);
-        m_web3j = Web3j.build(new HttpService(eth_node_url));
+        m_web3j = Web3j.build(
+                new HttpService(eth_node_url),
+                POLLING_INTERVAL,
+                Async.defaultExecutorService());
 
         DefaultBlockParameterName startingBlock = from_first_block ?
                 DefaultBlockParameterName.EARLIEST : DefaultBlockParameterName.LATEST;
