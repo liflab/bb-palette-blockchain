@@ -43,7 +43,8 @@ Event myEvent = new Event(
 
 // This processor will then retrieve these events and output their parameters' values
 ApplyFunction getEventParameters = new ApplyFunction(
-    new GetEventParameters(myEvent);
+    new GetEventParameters(myEvent)
+);
 
 // Connect you processors
 Connector.connect(listener, getEventParameters);
