@@ -21,6 +21,7 @@ Then, it is possible to catch and deal with these events with the following Beep
 
 ```java
 // Initiating the smart contract's log catcher
+// Please note that such processor forces `push` mode
 CatchEthContractLogs catcher = new CatchEthContractLogs(
   "http://localhost:8545",    // should be replaced with the actual URL 
                               // of the RPC-enabled Ethereum node

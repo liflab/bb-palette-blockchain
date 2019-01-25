@@ -63,6 +63,8 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
      * available ETH node via RPC, and filter events for a specific contract
      * already deployed to the blockchain.
      *
+     * THIS PROCESSOR FORCES PUSH MODE
+     *
      * @param eth_node_url
      *          The URL of the RPC-enabled ETH node.
      *
