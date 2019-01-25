@@ -33,7 +33,7 @@ public class CatchEthContractLogsTest
      * You need a wallet with sufficient funds on your account.
      * @throws Exception
      */
-    @Test
+//    @Test
     public void deployContract() throws Exception
     {
         Web3j web3j = Web3j.build(new HttpService(ETH_NODE_URL));
@@ -53,7 +53,7 @@ public class CatchEthContractLogsTest
      * You need a wallet with sufficient funds on your account.
      * @throws Exception
      */
-    @Test
+//    @Test
     public void provokeEvents() throws Exception
     {
         Web3j web3j = Web3j.build(new HttpService(ETH_NODE_URL));
@@ -74,7 +74,7 @@ public class CatchEthContractLogsTest
         }
     }
 
-    @Test
+//    @Test
     public void testLogProcessor() throws InterruptedException
     {
         CatchEthContractLogs listener =
