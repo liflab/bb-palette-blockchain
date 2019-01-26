@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/qbetti/bb-palette-blockchain.svg?branch=master)](https://travis-ci.org/qbetti/bb-palette-blockchain)
 # A BeepBeep palette to monitor Blockchain events
-
+[![Build Status](https://travis-ci.org/qbetti/bb-palette-blockchain.svg?branch=master)](https://travis-ci.org/qbetti/bb-palette-blockchain)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=qbetti_bb-palette-blockchain&metric=coverage)](https://sonarcloud.io/dashboard?id=qbetti_bb-palette-blockchain)
 
 This project contains a palette for [BeepBeep3](https://liflab.github.io/beepbeep-3/ "BeepBeep3's Homepage"), 
 a Complexe Event Processing and monitoring tool developed at Laboratoire d'Informatique Formelle in Université du Québec à Chicoutimi.
