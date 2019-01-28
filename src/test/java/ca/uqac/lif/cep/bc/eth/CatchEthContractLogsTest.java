@@ -4,6 +4,7 @@ import ca.uqac.lif.cep.Connector;
 import ca.uqac.lif.cep.Processor;
 import ca.uqac.lif.cep.functions.ApplyFunction;
 import ca.uqac.lif.cep.tmf.Sink;
+import org.junit.Assert;
 import org.junit.Test;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
@@ -12,8 +13,13 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.Queue;
+import java.util.Scanner;
 
 /**
  * Tests the {@link CatchEthContractLogs} processor and {@link GetEventParameters}
@@ -119,6 +125,38 @@ public class CatchEthContractLogsTest
         public Processor duplicate(boolean b)
         {
             return new EventPrinter();
+        }
+    }
+
+    @Test
+    public void testGeth () throws InterruptedException
+    {
+        try
+        {
+            Runtime rt = Runtime.getRuntime();
+            Process pr = rt.exec("geth version");
+            OutputStream out = pr.getOutputStream();
+            InputStream err = pr.getInputStream();
+
+            int result = pr.waitFor();
+
+            System.out.println(out);
+            Scanner sErr = new Scanner(err);
+            while (sErr.hasNext()) {
+                System.out.println(sErr.nextLine());
+            }
+
+            if(result == 0) {
+                System.out.println("Worked");
+            } else {
+                System.out.println("Damn");
+            }
+
+            Assert.assertEquals(0, result);
+        }
+        catch (IOException e)
+        {
+            System.out.println("Geth is not installed");
         }
     }
 }
