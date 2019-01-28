@@ -157,6 +157,7 @@ public class CatchEthContractLogsTest
         catch (IOException e)
         {
             System.out.println("Geth is not installed");
+            Assert.fail();
         }
     }
 }
