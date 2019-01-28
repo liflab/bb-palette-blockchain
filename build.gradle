@@ -22,3 +22,13 @@ dependencies {
     testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
 
 }
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "qbetti_bb-palette-blockchain"
+        property "sonar.organization", "qbetti-github"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.login", "442ff028566985b237c69ac88dc3c50ef5a037b7"
+
+    }
+}
