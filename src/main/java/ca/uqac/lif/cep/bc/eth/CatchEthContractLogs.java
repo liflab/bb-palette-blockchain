@@ -73,7 +73,9 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
      *
      * @param from_first_block
      *          Specifies if all the events of the contract from the beginning of the blockchain
-     *          or only new ones should be caught
+     *          (true) or if only the latest ones should be caught (false). The second option means
+     *          that if events have already been triggered in the blockchain, only those contained
+     *          in the last block and in the new ones will be retrieved.
      */
     public CatchEthContractLogs(String eth_node_url, String contract_address, boolean from_first_block)
     {
@@ -131,6 +133,19 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
         m_run = false;
         m_subscription.dispose();
     }
+
+    /**
+     * Indicates if the {@link CatchEthContractLogs} is currently listening
+     * to events from the blockchain.
+     *
+     * @return true if the {@link CatchEthContractLogs} is currently listening to
+     *          events from the blockchain, false otherwise.
+     */
+    public boolean isCatching()
+    {
+        return m_subscription != null && !m_subscription.isDisposed();
+    }
+
 
     @Override
     public Pushable getPushableInput(int i)
