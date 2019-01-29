@@ -6,6 +6,9 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install ethereum
 
+sudo: required
+
+
 addons:
   sonarcloud:
     organization: "qbetti-github" # the key of the org you chose
