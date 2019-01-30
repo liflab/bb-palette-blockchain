@@ -8,7 +8,7 @@ import org.web3j.protocol.ipc.WindowsIpcService;
 public class EthereumNodeIPC extends EthereumNode
 {
     public static final String DEFAULT_IPC_PATH_WINDOWS = "\\\\.\\pipe\\geth.ipc";
-    public static final String DEFAULT_IPC_PATH_UNIX = "./tmp/geth";
+    public static final String DEFAULT_IPC_PATH_UNIX = DEFAULT_NODE_DIR + "/geth.ipc";
 
     private String m_ipcPath;
 
