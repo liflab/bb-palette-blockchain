@@ -5,15 +5,20 @@ import ca.uqac.lif.cep.Pullable;
 import ca.uqac.lif.cep.Pushable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import org.apache.commons.lang3.SystemUtils;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.ipc.IpcService;
+import org.web3j.protocol.ipc.UnixIpcService;
+import org.web3j.protocol.ipc.WindowsIpcService;
 import org.web3j.utils.Async;
 
 /**
- * Connects to an Ethereum node via RPC and wait for EVM log events
+ * Connects to an Ethereum node via RPC or IPC and wait for EVM log events
  * on a specific smart contract. When a corresponding event occur,
  * its log is pushed to the output.
 
@@ -63,13 +68,16 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
      * available ETH node via RPC, and filter events for a specific contract
      * already deployed to the blockchain.
      *
+     * THS PROCESSOR MUST BE INSTANTIATED VIA {@link #buildWithIPC(String, String, boolean)}
+     * or {@link #buildWithRPC(String, String, boolean)}
+     *
      * THIS PROCESSOR FORCES PUSH MODE
      *
-     * @param eth_node_url
-     *          The URL of the RPC-enabled ETH node.
+     * @param web3j_service
+     *          The service used for the connection (either IPC or RPC)
      *
      * @param contract_address
-     *          The address of the contract in the ETH blockchain (must start with "0x").
+     *          The address of the contract in the ETH blockchain (must start with "0x")
      *
      * @param from_first_block
      *          Specifies if all the events of the contract from the beginning of the blockchain
@@ -77,15 +85,11 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
      *          that if events have already been triggered in the blockchain, only those contained
      *          in the last block and in the new ones will be retrieved.
      */
-    public CatchEthContractLogs(String eth_node_url, String contract_address, boolean from_first_block)
+    private CatchEthContractLogs(Web3jService web3j_service, String contract_address, boolean from_first_block)
     {
         super(0,1);
-
-        System.out.println("Initiating connection to eth node at " + eth_node_url);
-        m_web3j = Web3j.build(
-                new HttpService(eth_node_url),
-                POLLING_INTERVAL,
-                Async.defaultExecutorService());
+        System.out.println("Initiating connection to eth node at " + web3j_service.toString());
+        m_web3j = Web3j.build(web3j_service, POLLING_INTERVAL, Async.defaultExecutorService());
 
         DefaultBlockParameterName startingBlock = from_first_block ?
                 DefaultBlockParameterName.EARLIEST : DefaultBlockParameterName.LATEST;
@@ -94,6 +98,68 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
                 startingBlock,
                 DefaultBlockParameterName.LATEST,
                 contract_address);
+    }
+
+    /**
+     * Constructs a {@link CatchEthContractLogs} which will listen to events via RPC
+     * (RPC should be enabled on the node).
+     * A {@link CatchEthContractLogs} PROCESSOR FORCES PUSH MODE.
+     *
+     * @param eth_node_url
+     *          The node RPC url
+     *
+     * @param contract_address
+     *          The address of the contract in the ETH blockchain (must start with "0x")
+     *
+     * @param from_first_block
+     *          Specifies if all the events of the contract from the beginning of the blockchain
+     *          (true) or if only the latest ones should be caught (false). The second option means
+     *          that if events have already been triggered in the blockchain, only those contained
+     *          in the last block and in the new ones will be retrieved.
+     *
+     * @return The initiated RPC-enabled {@link CatchEthContractLogs} processor
+     */
+    public static CatchEthContractLogs buildWithRPC(String eth_node_url, String contract_address, boolean from_first_block)
+    {
+        return new CatchEthContractLogs(new HttpService(eth_node_url), contract_address, from_first_block);
+    }
+
+    /**
+     * Constructs a {@link CatchEthContractLogs} which will listen to events via IPC
+     * (IPC should be enabled on the node).
+     * A {@link CatchEthContractLogs} PROCESSOR FORCES PUSH MODE.
+     *
+     * @param eth_node_ipc
+     *          The node IPC socket path
+     *
+     * @param contract_address
+     *          The address of the contract in the ETH blockchain (must start with "0x")
+     *
+     * @param from_first_block
+     *          Specifies if all the events of the contract from the beginning of the blockchain
+     *          (true) or if only the latest ones should be caught (false). The second option means
+     *          that if events have already been triggered in the blockchain, only those contained
+     *          in the last block and in the new ones will be retrieved.
+     *
+     * @return The initiated RPC-enabled {@link CatchEthContractLogs} processor
+     */
+    public static CatchEthContractLogs buildWithIPC(String eth_node_ipc, String contract_address, boolean from_first_block)
+    {
+        IpcService ipcService;
+
+        if(SystemUtils.IS_OS_WINDOWS)
+        {
+            ipcService = new WindowsIpcService(eth_node_ipc);
+        }
+        else if(SystemUtils.IS_OS_UNIX)
+        {
+            ipcService = new UnixIpcService(eth_node_ipc);
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Operation system is neither UNIX nor Windows");
+        }
+        return new CatchEthContractLogs(ipcService, contract_address, from_first_block);
     }
 
     @Override

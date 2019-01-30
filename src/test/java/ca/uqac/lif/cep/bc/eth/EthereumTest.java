@@ -21,7 +21,7 @@ public class EthereumTest
     private EthereumNode m_node;
 
     /**
-     * Check that geth is intalled before launching tests
+     * Check that geth is installed before launching tests
      */
     @BeforeClass
     public static void checkGethInstallation()
@@ -50,7 +50,7 @@ public class EthereumTest
     @Before
     public void startNode() throws IOException
     {
-        m_node = new EthereumNode();
+        m_node = new EthereumNodeIPC();
         m_node.start();
         m_node.waitUntilReady();
     }
@@ -67,6 +67,12 @@ public class EthereumTest
     }
 
     @Test
+    public void testReachNode()
+    {
+        Assert.assertNotNull(m_node.getGethVersion());
+    }
+
+    @Test
     public void testCatchAllEthContractLogs() throws Exception
     {
         Coursetro contract = m_node.deployContract();
@@ -75,7 +81,10 @@ public class EthereumTest
 
         // Piping the event catcher, the event caster and a tank so we can pull them
         CatchEthContractLogs listener =
-                new CatchEthContractLogs(EthereumNode.NODE_URL, contract.getContractAddress(), true);
+                CatchEthContractLogs.buildWithIPC(
+                        EthereumNodeIPC.getDefaultIPCPath(),
+                        contract.getContractAddress(),
+                        true);
 
         ApplyFunction getEventParameters =
                 new ApplyFunction(new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
@@ -117,7 +126,10 @@ public class EthereumTest
 
         // Piping the event catcher, the event caster and a tank so we can pull them
         CatchEthContractLogs listener =
-                new CatchEthContractLogs(EthereumNode.NODE_URL, contract.getContractAddress(), false);
+                CatchEthContractLogs.buildWithIPC(
+                        EthereumNodeIPC.getDefaultIPCPath(),
+                        contract.getContractAddress(),
+                        false);
 
         ApplyFunction getEventParameters =
                 new ApplyFunction(new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
