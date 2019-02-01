@@ -63,6 +63,9 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
      */
     private Disposable m_subscription;
 
+    private String m_lastTransactionHash;
+
+
     /**
      * Initializes the catcher so it can communicate with a running and
      * available ETH node via RPC, and filter events for a specific contract
@@ -162,15 +165,26 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
         return new CatchEthContractLogs(ipcService, contract_address, from_first_block);
     }
 
+
     @Override
     public void run()
     {
+        m_lastTransactionHash = "";
         m_run = true;
         System.out.println("Listening for events...");
         m_subscription = m_web3j.ethLogFlowable(m_ethFilter).subscribe(
                 log -> {
                     Pushable pushable = getPushableOutput(0);
-                    pushable.push(log);
+
+                    if(m_lastTransactionHash.equals(log.getTransactionHash()))
+                    {
+                        System.out.println("Ignored repeated transaction");
+                    }
+                    else
+                    {
+                        m_lastTransactionHash = log.getTransactionHash();
+                        pushable.push(log);
+                    }
                 },
                 throwable -> {
                     System.out.println("Subscription finished prematurely");

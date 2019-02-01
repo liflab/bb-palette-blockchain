@@ -5,6 +5,7 @@ import ca.uqac.lif.cep.Pullable;
 import ca.uqac.lif.cep.functions.ApplyFunction;
 import ca.uqac.lif.cep.tmf.Tank;
 import org.junit.*;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.io.IOException;
 import java.math.BigInteger;

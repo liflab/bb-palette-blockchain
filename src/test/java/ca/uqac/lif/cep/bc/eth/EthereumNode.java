@@ -126,7 +126,7 @@ public abstract class EthereumNode
     {
         Web3j web3j = Web3j.build(buildWeb3jService());
         Credentials credentials = WalletUtils.loadCredentials("", getWalletFilePath());
-        TransactionManager tm = new RawTransactionManager(web3j, credentials, 500, 500);
+        TransactionManager tm = new RawTransactionManager(web3j, credentials, 500, 200);
 
         return Coursetro.deploy(web3j, tm, BigInteger.ONE, BigInteger.valueOf(5000000)).send();
     }
