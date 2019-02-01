@@ -167,7 +167,14 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
     {
         m_run = true;
         System.out.println("Listening for events...");
-        m_subscription = m_web3j.ethLogFlowable(m_ethFilter).subscribe(this);
+        m_subscription = m_web3j.ethLogFlowable(m_ethFilter).subscribe(
+                log -> {
+                    Pushable pushable = getPushableOutput(0);
+                    pushable.push(log);
+                },
+                throwable -> {
+                    System.out.println("Subscription finished prematurely");
+                });
     }
 
     /**
@@ -183,6 +190,8 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
         pushable.push(log);
     }
 
+
+
     @Override
     public void start()
     {
@@ -197,7 +206,12 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
     public synchronized void stop()
     {
         m_run = false;
-        m_subscription.dispose();
+
+        if (m_subscription != null)
+        {
+            m_subscription.dispose();
+        }
+        m_web3j.shutdown();
     }
 
     /**

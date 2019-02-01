@@ -8,7 +8,7 @@ public class EthereumNodeRPC extends EthereumNode
     /**
      * The URL of the node
      */
-    public static String DEFAULT_NODE_URL = "http://localhost:8545";
+    public static String DEFAULT_NODE_URL = "http://127.0.0.1:8545";
 
     private String m_url;
 
@@ -36,7 +36,7 @@ public class EthereumNodeRPC extends EthereumNode
         return new String[]{
                 "geth", "--dev",
                 "--datadir", getNodeDir(),
-                "--rpc", m_url
+                "--rpc"
         };
     }
 }

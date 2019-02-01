@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 /**
  * A wrapper class around the geth command line program and its
@@ -101,7 +102,6 @@ public abstract class EthereumNode
                 break;
             }
         }
-        sErr.close();
     }
 
     /**
@@ -126,7 +126,7 @@ public abstract class EthereumNode
     {
         Web3j web3j = Web3j.build(buildWeb3jService());
         Credentials credentials = WalletUtils.loadCredentials("", getWalletFilePath());
-        TransactionManager tm = new RawTransactionManager(web3j, credentials, 500, 1000);
+        TransactionManager tm = new RawTransactionManager(web3j, credentials, 500, 500);
 
         return Coursetro.deploy(web3j, tm, BigInteger.ONE, BigInteger.valueOf(5000000)).send();
     }

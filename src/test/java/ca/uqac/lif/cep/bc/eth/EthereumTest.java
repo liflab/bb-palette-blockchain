@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Tests the {@link CatchEthContractLogs} processor and {@link GetEventParameters}
@@ -18,6 +19,9 @@ import java.util.List;
  */
 public class EthereumTest
 {
+    /**
+     * The Ethereum node that will be started
+     */
     private EthereumNode m_node;
 
     /**
@@ -26,7 +30,6 @@ public class EthereumTest
     @BeforeClass
     public static void checkGethInstallation()
     {
-        // Checking geth is installed
         try
         {
             Runtime rt = Runtime.getRuntime();
@@ -44,22 +47,22 @@ public class EthereumTest
 
     /**
      * Starts an Ethereum node and wait until it is ready for transactions
-     * before each test
+     *
+     * @param rpcEnabled
+     *          Specifies if the Ethereum node should accept RPC connections or not
      * @throws IOException
      */
-    @Before
-    public void startNode() throws IOException
+    public void startNode(boolean rpcEnabled) throws IOException
     {
-        m_node = new EthereumNodeIPC();
+        m_node = rpcEnabled ? new EthereumNodeRPC(): new EthereumNodeIPC();
         m_node.start();
         m_node.waitUntilReady();
     }
 
     /**
-     * Stops the Ethereum node previously started after each test
+     * Stops the Ethereum node previously started
      * @throws InterruptedException
      */
-    @After
     public void stopNode() throws InterruptedException
     {
         m_node.stop();
@@ -67,22 +70,24 @@ public class EthereumTest
     }
 
     @Test
-    public void testReachNode()
-    {
-        Assert.assertNotNull(m_node.getGethVersion());
+    public void testReachNode() throws IOException, InterruptedException {
+        startNode(false);
+        String version = m_node.getGethVersion();
+        Assert.assertNotNull(version);
+        stopNode();
     }
 
     @Test
-    public void testCatchAllEthContractLogs() throws Exception
+    public void testCatchAllEthContractLogsViaRPC() throws Exception
     {
+        startNode(true);
         Coursetro contract = m_node.deployContract();
         List<Object[]> eventsParams = initExpectedEventParamValues(10, "Quentin");
         sendSomeEvents(eventsParams, contract, 0, 5);
 
-        // Piping the event catcher, the event caster and a tank so we can pull them
         CatchEthContractLogs listener =
-                CatchEthContractLogs.buildWithIPC(
-                        EthereumNodeIPC.getDefaultIPCPath(),
+                CatchEthContractLogs.buildWithRPC(
+                        EthereumNodeRPC.DEFAULT_NODE_URL,
                         contract.getContractAddress(),
                         true);
 
@@ -96,9 +101,7 @@ public class EthereumTest
         Pullable pullable = tank.getPullableOutput(0);
 
         // Adding more events in parallel
-        Thread addMoreEvents = new Thread(() ->
-                sendSomeEvents(eventsParams, contract, 5, 5));
-        addMoreEvents.start();
+        sendSomeEvents(eventsParams, contract, 5, 5);
 
         // Retrieving events from tank and testing
         int counter = 0;
@@ -113,13 +116,14 @@ public class EthereumTest
             }
         }
 
-        addMoreEvents.join();
         listener.stop();
+        stopNode();
     }
 
     @Test
-    public void testCatchOnlyLastAndNewEthContractLogs() throws Exception
+    public void testCatchOnlyLastAndNewEthContractLogsViaIPC() throws Exception
     {
+        startNode(false);
         Coursetro contract = m_node.deployContract();
         List<Object[]> eventsParams = initExpectedEventParamValues(10, "Quentin");
         sendSomeEvents(eventsParams, contract, 0, 5);
@@ -145,9 +149,7 @@ public class EthereumTest
         }
 
         // Adding more events in parallel
-        Thread addMoreEvents = new Thread(() ->
-                sendSomeEvents(eventsParams, contract, 5, 5));
-        addMoreEvents.start();
+        sendSomeEvents(eventsParams, contract, 5, 5);
 
         // Retrieving last and new events from tank and testing
         Pullable pullable = tank.getPullableOutput(0);
@@ -163,8 +165,8 @@ public class EthereumTest
             }
         }
 
-        addMoreEvents.join();
         listener.stop();
+        stopNode();
     }
 
     /**
@@ -227,5 +229,41 @@ public class EthereumTest
                 e.printStackTrace();
             }
         }
+    }
+
+    private static CatchEthContractLogs buildDummy()
+    {
+        return CatchEthContractLogs.buildWithIPC(
+                EthereumNodeIPC.getDefaultIPCPath(),
+                "0x0",
+                true);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testDuplicate()
+    {
+        CatchEthContractLogs p = buildDummy();
+        p.duplicate(true);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetPushableInput()
+    {
+        CatchEthContractLogs p = buildDummy();
+        p.getPushableInput();
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetPullableInput()
+    {
+        CatchEthContractLogs p = buildDummy();
+        p.getPullableInput(0);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testGetPullableOutput()
+    {
+        CatchEthContractLogs p = buildDummy();
+        p.getPullableOutput();
     }
 }

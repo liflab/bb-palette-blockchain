@@ -5,6 +5,8 @@ import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.ipc.UnixIpcService;
 import org.web3j.protocol.ipc.WindowsIpcService;
 
+import java.io.File;
+
 public class EthereumNodeIPC extends EthereumNode
 {
     public static final String DEFAULT_IPC_PATH_WINDOWS = "\\\\.\\pipe\\geth.ipc";
@@ -60,7 +62,7 @@ public class EthereumNodeIPC extends EthereumNode
         }
         else if(SystemUtils.IS_OS_UNIX)
         {
-            return DEFAULT_IPC_PATH_UNIX;
+            return new File(DEFAULT_IPC_PATH_UNIX).getAbsolutePath();
         }
         else
         {
