@@ -36,10 +36,10 @@ import java.util.List;
  * );
  * }</pre>
  *
- * This {@link Event} can then be used to instantiate the {@link GetEventParameters} function.
+ * This {@link Event} can then be used to instantiate the {@link GetEthEventParameters} function.
  *
  */
-public class GetEventParameters extends UnaryFunction<Log, Object[]>
+public class GetEthEventParameters extends UnaryFunction<Log, Object[]>
 {
     /**
      * The {@link Event} whose parameters shall be retrieved
@@ -47,12 +47,12 @@ public class GetEventParameters extends UnaryFunction<Log, Object[]>
     private Event m_event;
 
     /**
-     * Initializes a {@link GetEventParameters} function.
+     * Initializes a {@link GetEthEventParameters} function.
      *
      * @param event
      *          The {@link Event} whose parameters shall be retrieved
      */
-    public GetEventParameters(Event event)
+    public GetEthEventParameters(Event event)
     {
         super(Log.class, Object[].class);
         m_event = event;
@@ -91,7 +91,7 @@ public class GetEventParameters extends UnaryFunction<Log, Object[]>
         }
         for(int i = indexedParameters.size(); i < paramNb; i++)
         {
-            paramValues[i] = nonIndexedParameters.get(i).getValue();
+            paramValues[i] = nonIndexedParameters.get(i - indexedParameters.size()).getValue();
         }
 
         return paramValues;

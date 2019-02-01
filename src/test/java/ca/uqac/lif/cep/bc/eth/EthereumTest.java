@@ -5,16 +5,14 @@ import ca.uqac.lif.cep.Pullable;
 import ca.uqac.lif.cep.functions.ApplyFunction;
 import ca.uqac.lif.cep.tmf.Tank;
 import org.junit.*;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
- * Tests the {@link CatchEthContractLogs} processor and {@link GetEventParameters}
+ * Tests the {@link CatchEthContractLogs} processor and {@link GetEthEventParameters}
  * function. Note that you should have an Geth installed and reference in the PATH
  * environment variable.s
  */
@@ -93,7 +91,7 @@ public class EthereumTest
                         true);
 
         ApplyFunction getEventParameters =
-                new ApplyFunction(new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
+                new ApplyFunction(new GetEthEventParameters(Coursetro.INSTRUCTOR_EVENT));
 
         Tank tank = new Tank();
 
@@ -137,7 +135,7 @@ public class EthereumTest
                         false);
 
         ApplyFunction getEventParameters =
-                new ApplyFunction(new GetEventParameters(Coursetro.INSTRUCTOR_EVENT));
+                new ApplyFunction(new GetEthEventParameters(Coursetro.INSTRUCTOR_EVENT));
 
         Tank tank = new Tank();
 
