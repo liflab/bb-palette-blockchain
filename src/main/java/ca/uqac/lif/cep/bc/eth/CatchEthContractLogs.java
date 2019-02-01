@@ -35,7 +35,7 @@ import org.web3j.utils.Async;
  *
  * @author Quentin Betti
  */
-public class CatchEthContractLogs extends Processor implements Runnable, Consumer<Log>
+public class CatchEthContractLogs extends Processor implements Runnable
 {
     /**
      * The interval (in milliseconds) at which the ETH node will be polled
@@ -190,21 +190,6 @@ public class CatchEthContractLogs extends Processor implements Runnable, Consume
                     System.out.println("Subscription finished prematurely");
                 });
     }
-
-    /**
-     * Pushes to the output each log it catches.
-     *
-     * @param log
-     *          The caught log
-     */
-    @Override
-    public void accept(Log log)
-    {
-        Pushable pushable = getPushableOutput(0);
-        pushable.push(log);
-    }
-
-
 
     @Override
     public void start()
