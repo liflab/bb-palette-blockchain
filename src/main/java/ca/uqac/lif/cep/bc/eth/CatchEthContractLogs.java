@@ -4,18 +4,15 @@ import ca.uqac.lif.cep.Processor;
 import ca.uqac.lif.cep.Pullable;
 import ca.uqac.lif.cep.Pushable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import org.apache.commons.lang3.SystemUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.protocol.ipc.IpcService;
-import org.web3j.protocol.ipc.UnixIpcService;
-import org.web3j.protocol.ipc.WindowsIpcService;
 import org.web3j.utils.Async;
+
+import java.util.logging.Logger;
 
 /**
  * Connects to an Ethereum node via RPC or IPC and wait for EVM log events
@@ -37,6 +34,11 @@ import org.web3j.utils.Async;
  */
 public class CatchEthContractLogs extends Processor implements Runnable
 {
+    /**
+     * Logger of the class
+     */
+    private static final Logger LOGGER = Logger.getLogger(CatchEthContractLogs.class.getName());
+
     /**
      * The interval (in milliseconds) at which the ETH node will be polled
      */
@@ -63,8 +65,11 @@ public class CatchEthContractLogs extends Processor implements Runnable
      */
     private Disposable m_subscription;
 
+    /**
+     * The hash of the last transaction. Is used to know if a duplicated transaction was
+     * caught when subscribing to the Ethereum filter (this may happen due to a bug in Web3j)
+     */
     private String m_lastTransactionHash;
-
 
     /**
      * Initializes the catcher so it can communicate with a running and
@@ -91,7 +96,7 @@ public class CatchEthContractLogs extends Processor implements Runnable
     private CatchEthContractLogs(Web3jService web3j_service, String contract_address, boolean from_first_block)
     {
         super(0,1);
-        System.out.println("Initiating connection to eth node at " + web3j_service.toString());
+        LOGGER.info("Initiating connection to eth node at " + web3j_service.toString());
         m_web3j = Web3j.build(web3j_service, POLLING_INTERVAL, Async.defaultExecutorService());
 
         DefaultBlockParameterName startingBlock = from_first_block ?
@@ -148,22 +153,9 @@ public class CatchEthContractLogs extends Processor implements Runnable
      */
     public static CatchEthContractLogs buildWithIPC(String eth_node_ipc, String contract_address, boolean from_first_block)
     {
-        IpcService ipcService;
-
-        if(SystemUtils.IS_OS_WINDOWS)
-        {
-            ipcService = new WindowsIpcService(eth_node_ipc);
-        }
-        else if(SystemUtils.IS_OS_UNIX)
-        {
-            ipcService = new UnixIpcService(eth_node_ipc);
-        }
-        else
-        {
-            throw new UnsupportedOperationException("Operation system is neither UNIX nor Windows");
-        }
-        return new CatchEthContractLogs(ipcService, contract_address, from_first_block);
+        return new CatchEthContractLogs(IpcUtils.newIpcService(eth_node_ipc), contract_address, from_first_block);
     }
+
 
 
     @Override
@@ -171,14 +163,14 @@ public class CatchEthContractLogs extends Processor implements Runnable
     {
         m_lastTransactionHash = "";
         m_run = true;
-        System.out.println("Listening for events...");
+        LOGGER.info("Listening for events...");
         m_subscription = m_web3j.ethLogFlowable(m_ethFilter).subscribe(
                 log -> {
                     Pushable pushable = getPushableOutput(0);
 
                     if(m_lastTransactionHash.equals(log.getTransactionHash()))
                     {
-                        System.out.println("Ignored repeated transaction");
+                        LOGGER.info("Ignored repeated transaction");
                     }
                     else
                     {
@@ -187,7 +179,7 @@ public class CatchEthContractLogs extends Processor implements Runnable
                     }
                 },
                 throwable -> {
-                    System.out.println("Subscription finished prematurely");
+                    LOGGER.warning("Subscription finished prematurely (this might not be a problem)");
                 });
     }
 
@@ -224,7 +216,6 @@ public class CatchEthContractLogs extends Processor implements Runnable
     {
         return m_subscription != null && !m_subscription.isDisposed();
     }
-
 
     @Override
     public Pushable getPushableInput(int i)

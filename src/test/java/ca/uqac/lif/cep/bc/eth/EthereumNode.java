@@ -10,6 +10,7 @@ import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
@@ -38,9 +39,9 @@ public abstract class EthereumNode
     private String m_nodeDir;
 
     private Thread m_loggingErrThread;
-    private Thread m_loggingOutThread;
 
     private boolean m_isReady;
+
     /**
      * Initialize a node
      */
@@ -87,23 +88,11 @@ public abstract class EthereumNode
                 {
                     m_isReady = true;
                 }
-//                System.out.println(line);
-            }
-        });
-
-        m_loggingOutThread = new Thread(() ->
-        {
-            Scanner sIn = new Scanner(m_process.getInputStream());
-            while (sIn.hasNext())
-            {
-                String line = sIn.nextLine();
-//                System.out.println(line);
             }
         });
 
         m_thread.start();
         m_loggingErrThread.start();
-        m_loggingOutThread.start();
     }
 
     /**
@@ -116,7 +105,6 @@ public abstract class EthereumNode
         m_process.destroy();
         m_thread.join();
         m_loggingErrThread.interrupt();
-        m_loggingOutThread.interrupt();
     }
 
     /**
@@ -124,15 +112,6 @@ public abstract class EthereumNode
      */
     public void waitUntilReady()
     {
-//        Scanner sErr = new Scanner(m_process.getErrorStream());
-//        while (sErr.hasNext())
-//        {
-//            String line = sErr.nextLine();
-//            if (line.contains("Sealing paused, waiting for transactions"))
-//            {
-//                m_isReady = true;
-//            }
-//        }
         while (!m_isReady)
         {
             try
@@ -150,11 +129,24 @@ public abstract class EthereumNode
      * Retrieves the relative path to the wallet of the developer account
      *
      * @return the relative path to the wallet of the developer account
+     *
+     * @throws FileNotFoundException if no the wallet file could not be found
      */
-    public String getWalletFilePath()
+    public String getWalletFilePath() throws FileNotFoundException
     {
         File walletDir = new File(getNodeDir() + "/keystore");
-        File wallet = walletDir.listFiles()[0];
+        if (!walletDir.exists())
+        {
+            throw new FileNotFoundException("Directory " + walletDir.getAbsolutePath() + " does not exist");
+        }
+
+        File[] wallets = walletDir.listFiles();
+        if(wallets == null || wallets.length == 0)
+        {
+            throw  new FileNotFoundException("No wallets in " + walletDir.getAbsolutePath());
+        }
+
+        File wallet = wallets[0];
         return wallet.getPath();
     }
 
@@ -172,7 +164,6 @@ public abstract class EthereumNode
 
         return Coursetro.deploy(web3j, tm, BigInteger.TEN, BigInteger.valueOf(5000000)).send();
     }
-
 
     public String getGethVersion()
     {
@@ -211,10 +202,5 @@ public abstract class EthereumNode
     public String getNodeDir()
     {
         return m_nodeDir;
-    }
-
-    public boolean isReady()
-    {
-        return m_isReady;
     }
 }
