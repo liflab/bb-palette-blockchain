@@ -6,7 +6,6 @@ import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
 
@@ -14,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
-import java.util.logging.Logger;
 
 /**
  * A wrapper class around the geth command line program and its
@@ -39,7 +37,10 @@ public abstract class EthereumNode
 
     private String m_nodeDir;
 
+    private Thread m_loggingErrThread;
+    private Thread m_loggingOutThread;
 
+    private boolean m_isReady;
     /**
      * Initialize a node
      */
@@ -51,6 +52,7 @@ public abstract class EthereumNode
     public EthereumNode(String node_dir)
     {
         m_nodeDir = node_dir;
+        m_isReady = false;
     }
 
     /**
@@ -74,7 +76,34 @@ public abstract class EthereumNode
                 e.printStackTrace();
             }
         });
+
+        m_loggingErrThread = new Thread(() ->
+        {
+            Scanner sErr = new Scanner(m_process.getErrorStream());
+            while (sErr.hasNext())
+            {
+                String line = sErr.nextLine();
+                if (line.contains("Sealing paused, waiting for transactions"))
+                {
+                    m_isReady = true;
+                }
+//                System.out.println(line);
+            }
+        });
+
+        m_loggingOutThread = new Thread(() ->
+        {
+            Scanner sIn = new Scanner(m_process.getInputStream());
+            while (sIn.hasNext())
+            {
+                String line = sIn.nextLine();
+//                System.out.println(line);
+            }
+        });
+
         m_thread.start();
+        m_loggingErrThread.start();
+        m_loggingOutThread.start();
     }
 
     /**
@@ -86,6 +115,8 @@ public abstract class EthereumNode
     {
         m_process.destroy();
         m_thread.join();
+        m_loggingErrThread.interrupt();
+        m_loggingOutThread.interrupt();
     }
 
     /**
@@ -93,13 +124,24 @@ public abstract class EthereumNode
      */
     public void waitUntilReady()
     {
-        Scanner sErr = new Scanner(m_process.getErrorStream());
-        while (sErr.hasNext())
+//        Scanner sErr = new Scanner(m_process.getErrorStream());
+//        while (sErr.hasNext())
+//        {
+//            String line = sErr.nextLine();
+//            if (line.contains("Sealing paused, waiting for transactions"))
+//            {
+//                m_isReady = true;
+//            }
+//        }
+        while (!m_isReady)
         {
-            String line = sErr.nextLine();
-            if (line.contains("Sealing paused, waiting for transactions"))
+            try
             {
-                break;
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
             }
         }
     }
@@ -126,9 +168,9 @@ public abstract class EthereumNode
     {
         Web3j web3j = Web3j.build(buildWeb3jService());
         Credentials credentials = WalletUtils.loadCredentials("", getWalletFilePath());
-        TransactionManager tm = new RawTransactionManager(web3j, credentials, 500, 200);
+        TransactionManager tm = new RawTransactionManager(web3j, credentials, 400, 400);
 
-        return Coursetro.deploy(web3j, tm, BigInteger.ONE, BigInteger.valueOf(5000000)).send();
+        return Coursetro.deploy(web3j, tm, BigInteger.TEN, BigInteger.valueOf(5000000)).send();
     }
 
 
@@ -169,5 +211,10 @@ public abstract class EthereumNode
     public String getNodeDir()
     {
         return m_nodeDir;
+    }
+
+    public boolean isReady()
+    {
+        return m_isReady;
     }
 }

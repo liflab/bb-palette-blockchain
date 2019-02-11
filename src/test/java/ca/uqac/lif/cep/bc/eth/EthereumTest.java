@@ -54,6 +54,7 @@ public class EthereumTest
     public void startNode(boolean rpcEnabled) throws IOException
     {
         m_node = rpcEnabled ? new EthereumNodeRPC(): new EthereumNodeIPC();
+        m_node.eraseData();
         m_node.start();
         m_node.waitUntilReady();
     }
@@ -128,7 +129,7 @@ public class EthereumTest
         sendSomeEvents(eventsParams, contract, 0, 5);
 
         // Piping the event catcher, the event caster and a tank so we can pull them
-        CatchEthContractLogs listener =
+        CatchEthContractLogs catcher =
                 CatchEthContractLogs.buildWithIPC(
                         EthereumNodeIPC.getDefaultIPCPath(),
                         contract.getContractAddress(),
@@ -139,17 +140,16 @@ public class EthereumTest
 
         Tank tank = new Tank();
 
-        Connector.connect(listener, getEventParameters, tank);
-        listener.start();
+        Connector.connect(catcher, getEventParameters, tank);
+        catcher.start();
 
-        while (!listener.isCatching())
+        while (!catcher.isCatching())
         {
             Thread.sleep(100);
         }
 
         // Adding more events in parallel
         sendSomeEvents(eventsParams, contract, 5, 5);
-
         // Retrieving last and new events from tank and testing
         Pullable pullable = tank.getPullableOutput(0);
         int counter = 4;
@@ -163,8 +163,7 @@ public class EthereumTest
                 counter++;
             }
         }
-
-        listener.stop();
+        catcher.stop();
         stopNode();
     }
 
