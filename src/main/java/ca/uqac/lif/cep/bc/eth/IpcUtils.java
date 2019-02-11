@@ -5,7 +5,7 @@ import org.web3j.protocol.ipc.IpcService;
 import org.web3j.protocol.ipc.UnixIpcService;
 import org.web3j.protocol.ipc.WindowsIpcService;
 
-public class IpcUtils
+public abstract class IpcUtils
 {
     /**
      * Constructs an {@link IpcService} towards an IPC path based on the OS of the machine running the program
