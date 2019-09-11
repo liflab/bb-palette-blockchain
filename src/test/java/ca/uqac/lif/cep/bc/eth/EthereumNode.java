@@ -84,7 +84,8 @@ public abstract class EthereumNode
             while (sErr.hasNext())
             {
                 String line = sErr.nextLine();
-                if (line.contains("Sealing paused, waiting for transactions"))
+                System.out.println(line);
+                if (line.contains("waiting for transactions"))
                 {
                     m_isReady = true;
                 }
