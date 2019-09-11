@@ -84,7 +84,6 @@ public abstract class EthereumNode
             while (sErr.hasNext())
             {
                 String line = sErr.nextLine();
-                System.out.println(line);
                 if (line.contains("waiting for transactions"))
                 {
                     m_isReady = true;
