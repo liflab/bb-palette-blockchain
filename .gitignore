@@ -2,4 +2,5 @@
 .idea/
 out/
 build/
+node/
 wallet.json
